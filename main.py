@@ -3,39 +3,67 @@ import random as rand
 import math
 import hyperparameter as hp
 
+# ************************************************** GLOBAL INITIALIZATIONS ******************************************
 # Initialize pygame variables
 pygame.init()
 window = pygame.display.set_mode((hp.WIDTH, hp.HEIGHT))
+
 # player ball index (selected ball)
 selected_ball_index = None
+
+# list of balls currently on the screen
 balls = []
 
 # Game loop setup
 running = True
 clock = pygame.time.Clock()
+# ********************************************************************************************************************
 
-# Ball Functions
+# ************************************************** BALL FUNCTIONS **************************************************
+"""
+Ball Format:
+ball['position'] = [x, y]
+ball['velocity'] = [dx, dy]
+ball['color'] = (r, g, b)
+"""
 
-# called when user clicks on the screen
-# adds a ball to the screen at the position of the click
-def add_ball(position):
+"""
+Called when the user clicks on the screen.
+Adds a ball to the screen at the position of the click.
+
+Parameters:
+- position: The position of the click on the screen.
+"""
+def add_ball(clickPosition):
     newBall = {
-        'position': list(position),
+        'position': list(clickPosition),
         'velocity': [rand.randint(-hp.MAX_VELOCITY, hp.MAX_VELOCITY), rand.randint(-hp.MAX_VELOCITY, hp.MAX_VELOCITY)],
         'color': (rand.randint(0, 255), rand.randint(0, 255), rand.randint(0, 255))
     }
     balls.append(newBall)
 
-# checks if the mouse click is on a ball
-def is_click_on_ball(click_position):
+    
+"""
+Checks if the click is on a ball.
+
+Parameters:
+- clickPosition: The position of the click on the screen.
+"""
+def is_click_on_ball(clickPosition):
     for ball in balls:
-        ballDistanceFromClick = get_distance_click_ball(click_position, ball)
+        ballDistanceFromClick = get_distance_click_ball(clickPosition, ball)
         
         if ballDistanceFromClick < hp.BALL_RADIUS:
             return True
     return False
 
-# move the selected ball in the inputted direction
+"""
+Moves the selected ball in the inputted direction.
+
+Parameters:
+- dx: The change in the x direction.
+- dy: The change in the y direction.
+"""
 def move_selected_ball(dx, dy):
     if selected_ball_index is not None:
         # screen boundaries conditions
@@ -52,13 +80,20 @@ def move_selected_ball(dx, dy):
         balls[selected_ball_index]['position'][0] += dx
         balls[selected_ball_index]['position'][1] += dy
 
-# remove the selected ball
+"""
+Deletes the selected ball.
+"""
 def delete_selected_ball():
     if selected_ball_index is not None:
         del balls[selected_ball_index]
         selected_ball_index = None
 
-# get the index of the ball that was clicked on
+"""
+Selects the ball if the click is on a ball.
+
+Parameters:
+- click_pos: The position of the click on the screen.
+"""
 def select_ball(click_pos):
     global selected_ball_index
     for i, ball in enumerate(balls):
@@ -70,7 +105,13 @@ def select_ball(click_pos):
             balls[selected_ball_index]['velocity'] = [0, 0]
             break
 
-# Model the movement of the ball
+"""
+Moves the ball given its velocity and position.
+
+Parameters:
+- ball: The ball to move.
+"""
+
 def move_ball(ball):    
     ball['position'][0] += ball['velocity'][0]
     ball['position'][1] += ball['velocity'][1]
@@ -81,7 +122,13 @@ def move_ball(ball):
     if ball['position'][1] <= hp.BALL_RADIUS or ball['position'][1] >= hp.HEIGHT - hp.BALL_RADIUS:
         ball['velocity'][1] *= -1
 
-# Checks if two balls are overlapping and if so, bounces them off each other
+"""
+Bounces balls off each other.
+
+Parameters:
+- ball1: The first ball.
+- ball2: The second ball.
+"""
 def bounce_balls(ball1, ball2):
     dx = ball1['position'][0] - ball2['position'][0]
     dy = ball1['position'][1] - ball2['position'][1]
@@ -107,15 +154,28 @@ def bounce_balls(ball1, ball2):
         ball2['position'][0] -= correction_factor * dx
         ball2['position'][1] -= correction_factor * dy
 
-# Draw the ball onto the window
+"""
+Draws the ball onto the window.
+
+Parameters:
+- ball: The ball to draw.
+"""
 def draw_ball(ball):
     pygame.draw.circle(window, ball['color'], (int(ball['position'][0]), int(ball['position'][1])), hp.BALL_RADIUS)
 
-# Get the distance between the click and the ball
+"""
+Returns the distance between the click and the ball.
+
+Parameters:
+- click_pos: The position of the click on the screen.
+- ball: The ball to check the distance from.
+"""
 def get_distance_click_ball(click_pos, ball):
     return math.sqrt((ball['position'][0] - click_pos[0]) ** 2 + (ball['position'][1] - click_pos[1]) ** 2)
     
+# ********************************************************************************************************************
 
+# ************************************************** MAIN FUNCTION **************************************************
 def main():
     global running, selected_ball_index, balls
 
@@ -126,11 +186,13 @@ def main():
 
     while running:
         window.fill(hp.BACKGROUND_COLOR)
+
         # input handling
         for event in pygame.event.get():
             # if the user closes the window, exit the game
             if event.type == pygame.QUIT:
                 running = False
+
             # if the user clicks on the screen, add a ball if the click is not on a ball
             # otherwise, select the ball that was clicked on
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -174,7 +236,8 @@ def main():
                     # set the selected ball velocity to 0
                     balls[selected_ball_index]['velocity'] = [0, 0]
                     continue 
-                    
+            
+            # moves the ball
             move_ball(balls[i])
             i += 1
 
@@ -184,6 +247,7 @@ def main():
                 # if the ball is the selected ball, don't bounce it
                 if selected_ball_index is not None and (j == selected_ball_index or k == selected_ball_index):
                     continue
+                
                 bounce_balls(balls[j], balls[k])
 
         # Draw the balls onto the window
