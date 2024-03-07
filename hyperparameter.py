@@ -38,3 +38,8 @@ The default movement of the balls that are displayed to the user when the progra
 Sets the speed of the balls when they are added to the window.
 """
 DEFAULT_MOVEMENT = 10
+
+"""
+The color of the text that is displayed to the user when the program is run.
+"""
+TEXT_COLOR = (255, 255, 255)
