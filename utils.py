@@ -3,6 +3,8 @@ import random as rand
 import math
 import hyperparameter as hp
 import psutil
+import main 
+
 # list of balls currently on the screen
 """
 Ball Format:
@@ -17,15 +19,7 @@ Adds a ball to the screen at the position of the click.
 Parameters:
 - position: The position of the click on the screen.
 """
-def addBall(clickPosition, balls):
-    cpu_usage = psutil.cpu_percent()
-    mem_usage = psutil.virtual_memory().percent
-
-    velocity = min(hp.MAX_VELOCITY, cpu_usage / 2)
-    radius = max(hp.BALL_RADIUS, mem_usage / 2)
-
-    print(f'CPU: {cpu_usage}, Mem: {mem_usage}, Vel: {velocity}, Rad: {radius}')
-
+def addBall(clickPosition, balls, velocity, radius):
     newBall = {
         'position': list(clickPosition),
         # 'velocity': [rand.randint(-hp.MAX_VELOCITY, hp.MAX_VELOCITY), rand.randint(-hp.MAX_VELOCITY, hp.MAX_VELOCITY)],

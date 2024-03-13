@@ -4,6 +4,24 @@ import math
 import hyperparameter as hp
 import utils
 import psutil
+import threading
+import time
+
+cpu_usage = 0
+network_usage = 0
+
+def update_system_metrics():
+    global cpu_usage, network_usage
+    while True:
+        cpu_usage = psutil.cpu_percent()        
+        # get network usage 
+        network_usage_begin = psutil.net_io_counters()
+        time.sleep(1)
+        network_usage_end = psutil.net_io_counters()
+        
+        network_usage = (network_usage_end.bytes_sent - network_usage_begin.bytes_sent) + (network_usage_end.bytes_recv - network_usage_begin.bytes_recv)
+        print(f'CPU: {cpu_usage}%, Memory: {network_usage/1000}%')
+        time.sleep(1)  # Update every second
 
 # ************************************************** GLOBAL INITIALIZATIONS ******************************************
 # Initialize pygame variables
@@ -48,6 +66,8 @@ def selectBall(click_pos, balls):
 
             # stop the ball from moving so the user knows they have selected it
             balls[SELECTED_BALL_INDEX]['velocity'] = [0, 0]
+            # set the selected ball be white
+            balls[SELECTED_BALL_INDEX]['color'] = (255, 255, 255)
             break
 
 """
@@ -82,13 +102,15 @@ def deleteSelectedBall(balls):
         SELECTED_BALL_INDEX = None
 # ************************************************** MAIN FUNCTION **************************************************
 def main():
-    global running, SELECTED_BALL_INDEX, balls
+    global running, SELECTED_BALL_INDEX, balls, network_usage, cpu_usage
+    metrics_thread = threading.Thread(target=update_system_metrics, daemon=True)
+    metrics_thread.start()
 
     # Initialize balls given the initial settings
-    mem_usage = psutil.virtual_memory().percent
-    radius = max(hp.BALL_RADIUS, mem_usage // 2)
+    radius = 2*cpu_usage//1
+    velocity = max(2, network_usage//2000)
     for _ in range(hp.START_NUM_BALLS):
-        utils.addBall([rand.randint(radius, hp.WIDTH - radius), rand.randint(radius, hp.HEIGHT - radius)], balls)
+        utils.addBall([rand.randint(radius, hp.WIDTH - radius), rand.randint(radius, hp.HEIGHT - radius)], balls, velocity, radius)
         
     utils.displayEntryScreen(gameWindow, clock)
     # reset the game start time
@@ -115,7 +137,9 @@ def main():
             # otherwise, select the ball that was clicked on
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not utils.isClickOnBall(event.pos, balls):
-                    utils.addBall(event.pos, balls)
+                    radius = 2*cpu_usage//1
+                    velocity = network_usage//2000
+                    utils.addBall(event.pos, balls, velocity, radius)
                 else:
                     selectBall(event.pos, balls)
             
