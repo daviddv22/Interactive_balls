@@ -7,22 +7,6 @@ import psutil
 import threading
 import time
 
-cpu_usage = 0
-network_usage = 0
-
-def update_system_metrics():
-    global cpu_usage, network_usage
-    while True:
-        cpu_usage = psutil.cpu_percent()        
-        # get network usage 
-        network_usage_begin = psutil.net_io_counters()
-        time.sleep(1)
-        network_usage_end = psutil.net_io_counters()
-        
-        network_usage = (network_usage_end.bytes_sent - network_usage_begin.bytes_sent) + (network_usage_end.bytes_recv - network_usage_begin.bytes_recv)
-        print(f'CPU: {cpu_usage}%, Memory: {network_usage/1000}%')
-        time.sleep(1)  # Update every second
-
 # ************************************************** GLOBAL INITIALIZATIONS ******************************************
 # Initialize pygame variables
 pygame.init()
@@ -40,7 +24,28 @@ clock = pygame.time.Clock()
 
 game_start_time = pygame.time.get_ticks()  # Start time in milliseconds
 game_duration = 60000  # 60 seconds in milliseconds
-# ********************************************************************************************************************
+
+cpu_usage = 0
+network_usage = 0
+
+# ************************************************** SYSTEM METRICS THREAD *********************************************
+"""
+Sets the global variables cpu_usage and network_usage to the current CPU and network usage, respectively.
+"""
+def update_system_metrics():
+    global cpu_usage, network_usage
+    while True:
+        cpu_usage = psutil.cpu_percent()        
+        # get network usage 
+        network_usage_begin = psutil.net_io_counters()
+        time.sleep(1)
+        network_usage_end = psutil.net_io_counters()
+        
+        network_usage = (network_usage_end.bytes_sent - network_usage_begin.bytes_sent) + (network_usage_end.bytes_recv - network_usage_begin.bytes_recv)
+        print(f'CPU: {cpu_usage}%, Memory: {network_usage/1000}%')
+        time.sleep(2)  # Update every second
+
+# *********************************************** GRAPHIC FUNCTIONS ******************************************************
 
 """
 Draws the ball onto the gameWindow.
@@ -100,6 +105,7 @@ def deleteSelectedBall(balls):
     if SELECTED_BALL_INDEX is not None:
         del balls[SELECTED_BALL_INDEX]
         SELECTED_BALL_INDEX = None
+
 # ************************************************** MAIN FUNCTION **************************************************
 def main():
     global running, SELECTED_BALL_INDEX, balls, network_usage, cpu_usage
@@ -137,8 +143,6 @@ def main():
             # otherwise, select the ball that was clicked on
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not utils.isClickOnBall(event.pos, balls):
-                    radius = 2*cpu_usage//1
-                    velocity = network_usage//2000
                     utils.addBall(event.pos, balls, velocity, radius)
                 else:
                     selectBall(event.pos, balls)
