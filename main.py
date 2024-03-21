@@ -143,6 +143,8 @@ def main():
             # otherwise, select the ball that was clicked on
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not utils.isClickOnBall(event.pos, balls):
+                    radius = 2*cpu_usage//1
+                    velocity = network_usage//2000
                     utils.addBall(event.pos, balls, velocity, radius)
                 else:
                     selectBall(event.pos, balls)
